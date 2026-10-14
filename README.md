@@ -9,7 +9,7 @@
 
 <p align="center">
   <i>
-    This is an OIDC compatible fork from <a href="https://github.com/8perezm/bind-gui">this</a> repository. Credits to the original author.
+    This is an OIDC and standalone compatible fork from <a href="https://github.com/8perezm/bind-gui">this</a> repository. Credits to the original author.
   </i>
 </p>
 
@@ -42,6 +42,7 @@
 - **♻️ Dynamic Updates (RFC 2136)** — Record edits go through nsupdate with TSIG authentication — no container restart needed, SOA serial bumps automatically.
 - **🔐 DNSSEC inline-signing** — Toggle per-zone DNSSEC signing with a single switch. BIND manages keys and signs automatically. View CDS/CDNSKEY/DS records to publish at your registrar.
 - **📊 Statistics Dashboard** — Server counters, per-zone query statistics, memory usage, and task manager state — all served via BIND's statistics-channels API.
+- **🌐 Remote mode (AXFR)** — Run BIND on another machine with just a TSIG key: zones are read via AXFR and edited via nsupdate (no rndc, no shared volume). See [docs/configuration.md](docs/configuration.md#remote-mode-axfr-no-rndc-no-shared-files).
 - **🎨 Monochrome Design** — Clean, distraction-free black-and-white interface that means business.
 - **🐳 Docker Native** — Ready-to-use Docker image on Docker Hub. Works with your existing BIND9 container.
 
@@ -150,7 +151,7 @@ For your network to actually *use* this DNS server, configure your router's DHCP
 Pre-built images are available on GHCR:
 
 ```bash
-docker pull ghcr.io/giros-dit/bind-dns-gui:latest
+docker pull ghcr.io/pablofl01/bind-dns-gui:latest
 ```
 
 Images are tagged with:

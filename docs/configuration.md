@@ -21,6 +21,8 @@ The Bind DNS GUI is configured entirely through environment variables. Create a 
 | `BIND_RNDC_HOST` | No | `bind9` | Hostname of the BIND9 container for rndc connections (port 953) |
 | `BIND_DNS_HOST` | No | `bind9` | Hostname of the BIND9 container for nsupdate connections (port 53/TCP) |
 | `TSIG_KEY_FILE` | No | `/etc/bind/bind-gui.key` | Path to the TSIG key file for nsupdate and rndc authentication |
+| `BIND_ZONES` | No | — | Enables **remote mode** (see below). Comma-separated zones the TSIG key may read via AXFR |
+| `BIND_DNS_PORT` | No | `53` | DNS port of BIND, used for AXFR in remote mode |
 | `BIND_STATS_URL` | No | `http://bind9:8953` | URL of BIND's statistics-channels HTTP endpoint |
 
 ### Example `.env`
@@ -142,6 +144,14 @@ Record edits no longer require a container restart. The GUI sends **DNS UPDATE**
 - BIND auto-bumps the SOA serial
 - Changes are journaled in `.jnl` files alongside the zone file
 - With DNSSEC inline-signing enabled, BIND re-signs the zone automatically after each update
+
+## Remote Mode (AXFR, no rndc, no shared files)
+
+When BIND and bind-gui run on different machines and the only link is a TSIG key, set `BIND_ZONES=zone1.example.com,...` and do not mount `CONFIG_DIR`.
+
+- Zones are read with **AXFR** (`dig -k`), writes use `nsupdate`. Per-record TTLs are preserved and TTL edits are applied by replacing the RRset.
+- BIND needs, per zone: `allow-transfer { key zone1-key; };` and `update-policy { grant zone1-key zonesub ANY; };`. Port 53 TCP/UDP must be reachable.
+- Zone creation/deletion, DNSSEC, Stats and Config are unavailable (they need rndc or file access) and their buttons are hidden.
 
 ## Zone Lifecycle via rndc
 

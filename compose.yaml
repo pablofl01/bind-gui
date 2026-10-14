@@ -24,7 +24,7 @@ services:
 
   # ── Bind DNS GUI ──────────────────────────────────────────────────
   bind-gui:
-    image: migsperez/bind-dns-gui:latest
+    image: ghcr.io/pablofl01/bind-dns-gui:latest
     container_name: bind9-gui
     restart: unless-stopped
     ports:
