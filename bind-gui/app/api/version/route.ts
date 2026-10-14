@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { isRemoteMode } from "@/lib/axfr";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
     try {
@@ -13,6 +16,7 @@ export async function GET() {
         return NextResponse.json({
             name: appName,
             version: version,
+            remote: isRemoteMode(),
             timestamp: new Date().toISOString(),
         });
     } catch (error) {

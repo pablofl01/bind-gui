@@ -42,8 +42,26 @@ export function diffRecords(
         nextMap.set(recordKey(r), r);
     }
 
+    // An RRset has a single TTL, so a TTL change on any of its records means
+    // the whole RRset is dropped and re-added with the new TTL.
+    const rrsetKey = (r: DnsRecord) => `${r.name}|${r.type}`;
+    const changedTtl = new Set<string>();
+    for (const r of next) {
+        const old = currentMap.get(recordKey(r));
+        if (old && old.ttl !== r.ttl) changedTtl.add(rrsetKey(r));
+    }
+    const ttlDeleted = new Set<string>();
+
     // ── Records to delete ────────────────────────────────────────
     for (const r of current) {
+        if (changedTtl.has(rrsetKey(r))) {
+            const k = rrsetKey(r);
+            if (!ttlDeleted.has(k)) {
+                ttlDeleted.add(k);
+                ops.push({ kind: "delete-rrset", zone, name: r.name, type: r.type });
+            }
+            continue;
+        }
         if (nextMap.has(recordKey(r))) {
             continue; // unchanged — skip
         }
@@ -78,7 +96,7 @@ export function diffRecords(
 
     // ── Records to add ──────────────────────────────────────────
     for (const r of next) {
-        if (currentMap.has(recordKey(r))) {
+        if (currentMap.has(recordKey(r)) && !changedTtl.has(rrsetKey(r))) {
             continue; // already exists — skip
         }
 

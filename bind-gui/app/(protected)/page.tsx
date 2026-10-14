@@ -3,11 +3,13 @@
 import { useEffect, useState, useCallback } from "react";
 import type { ZoneSummary } from "@/components/types";
 import ZoneList from "@/components/zone-list";
+import { useRemoteMode } from "@/lib/useRemoteMode";
 import CreateZoneDialog from "@/components/create-zone-dialog";
 
 export default function DashboardPage() {
     const [zones, setZones] = useState<ZoneSummary[]>([]);
     const [loading, setLoading] = useState(true);
+    const remote = useRemoteMode();
 
     const fetchZones = useCallback(async () => {
         try {
@@ -41,7 +43,7 @@ export default function DashboardPage() {
                     Manage your Bind zone files. Select a zone to view and edit its records.
                 </p>
                 <div className="pt-2">
-                    <CreateZoneDialog onSuccess={fetchZones} />
+                    {!remote && <CreateZoneDialog onSuccess={fetchZones} />}
                 </div>
             </section>
 

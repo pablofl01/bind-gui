@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { remoteZones } from "./axfr";
 
 const CONFIG_DIR = process.env.CONFIG_DIR || "/etc/bind";
 
@@ -8,6 +9,8 @@ function zonePath(filename: string): string {
 }
 
 export function listZoneFiles(): string[] {
+    const remote = remoteZones();
+    if (remote) return remote.map((z) => `db.${z}`);
     try {
         const allFiles = fs.readdirSync(CONFIG_DIR);
         return allFiles.filter((f) => {
@@ -57,6 +60,7 @@ export function deleteZoneFile(filename: string): boolean {
 }
 
 export function listConfigFiles(): string[] {
+    if (remoteZones()) return [];
     try {
         const allFiles = fs.readdirSync(CONFIG_DIR);
         return allFiles.filter((f) => !f.startsWith("db.") && !f.startsWith("."));

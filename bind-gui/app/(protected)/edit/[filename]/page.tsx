@@ -8,12 +8,14 @@ import RecordFormDialog from "@/components/record-form-dialog";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useRemoteMode } from "@/lib/useRemoteMode";
 import { ArrowLeft, Save, Loader2, Shield } from "lucide-react";
 
 export default function EditZonePage() {
     const params = useParams();
     const router = useRouter();
     const filename = decodeURIComponent(params.filename as string);
+    const remote = useRemoteMode();
 
     const [zone, setZone] = useState<ZoneFile | null>(null);
     const [records, setRecords] = useState<DnsRecord[]>([]);
@@ -159,6 +161,8 @@ export default function EditZonePage() {
                             {message}
                         </span>
                     )}
+                    {!remote && (
+                        <>
                     <Link
                         href={`/zones/${encodeURIComponent(filename)}/dnssec`}
                         className="inline-flex items-center gap-2 px-4 py-2 text-xs font-mono uppercase tracking-widest border-2 border-black hover:bg-black hover:text-white transition-colors duration-INSTANT"
@@ -169,6 +173,8 @@ export default function EditZonePage() {
                     <Button variant="outline" onClick={() => setDeleteZoneOpen(true)}>
                         Delete Zone
                     </Button>
+                        </>
+                    )}
                     <Button onClick={saveToServer} disabled={saving}>
                         {saving ? (
                             <>

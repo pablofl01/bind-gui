@@ -9,6 +9,7 @@ import {
     setInlineSigningInNamedConfLocal,
 } from "@/lib/fileSystem";
 import { parseZoneFile, generateZoneFile } from "@/lib/dnsParser";
+import { isRemoteMode, axfrZoneContent } from "@/lib/axfr";
 import { addZone, reconfig, zoneStatus, RndcError } from "@/lib/rndc";
 
 export async function GET() {
@@ -16,7 +17,15 @@ export async function GET() {
     const zones = [];
 
     for (const filename of zoneFilenames) {
-        const content = readZoneFile(filename);
+        let content: string | null;
+        try {
+            content = isRemoteMode()
+                ? await axfrZoneContent(filename.replace(/^db\./, ""))
+                : readZoneFile(filename);
+        } catch (err) {
+            console.error(`Failed to transfer ${filename}:`, err);
+            continue;
+        }
         if (!content) continue;
         try {
             const parsed = parseZoneFile(filename, content);
@@ -35,6 +44,12 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+    if (isRemoteMode()) {
+        return NextResponse.json(
+            { error: "Creating zones is not supported in remote (AXFR) mode. Declare the zone on the BIND server and add it to BIND_ZONES." },
+            { status: 501 }
+        );
+    }
     try {
         const body = await request.json();
         const {

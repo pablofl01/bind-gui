@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import { useRemoteMode } from "@/lib/useRemoteMode";
 import VersionDisplay from "@/components/version-display";
 
 export default function Header() {
     const { data: session } = useSession();
+    const remote = useRemoteMode();
 
     return (
         <header className="border-b-4 border-black px-6 md:px-8 lg:px-12 py-6 bg-white">
@@ -24,8 +26,8 @@ export default function Header() {
                 {session && (
                     <nav className="hidden md:flex items-center gap-8">
                         <NavLink href="/">Zones</NavLink>
-                        <NavLink href="/stats">Stats</NavLink>
-                        <NavLink href="/config">Config</NavLink>
+                        {!remote && <NavLink href="/stats">Stats</NavLink>}
+                        {!remote && <NavLink href="/config">Config</NavLink>}
                         <Button
                             variant="outline"
                             size="sm"

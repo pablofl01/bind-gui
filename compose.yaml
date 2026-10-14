@@ -47,10 +47,14 @@ services:
       - BIND_RNDC_HOST=bind9
       - BIND_DNS_HOST=bind9
       - TSIG_KEY_FILE=/etc/bind/bind-gui.key
+      - BIND_ZONES=${BIND_ZONES:-}
+      - BIND_DNS_PORT=${BIND_DNS_PORT:-53}
     volumes:
-      - ./bind/config:/app/bind/config:rw
+      # Mount the BIND config directory (optional)
+      #- ./bind/config:/app/bind/config:rw
       - ./bind/config/bind-gui.key:/etc/bind/bind-gui.key:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Mount the Docker socket (optional — no longer required for zone writes)
+      #- /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
       bind9:
         condition: service_started

@@ -8,6 +8,7 @@ import { parseZoneFile } from "@/lib/dnsParser";
 import { diffRecords, opsToCommands } from "@/lib/dnsDiff";
 import { applyTransaction } from "@/lib/nsupdate";
 import { delZone, zoneStatus, sync, reconfig, RndcError } from "@/lib/rndc";
+import { isRemoteMode, axfrZoneContent } from "@/lib/axfr";
 import type { DnsRecord } from "@/lib/dnsTypes";
 
 export async function GET(
@@ -23,7 +24,7 @@ export async function GET(
     // (records that were added via nsupdate but never made it to the file
     // would otherwise be invisible to the GUI's diff logic).
     try {
-        await sync(domain, true);
+        if (!isRemoteMode()) await sync(domain, true);
     } catch (err) {
         // Zone may not be dynamic, or rndc may not be reachable. The GET
         // should still work, so swallow the error and read whatever is on
@@ -33,7 +34,7 @@ export async function GET(
         }
     }
 
-    const content = readZoneFile(filename);
+    const content = await loadZone(filename, domain);
     if (!content) {
         return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
@@ -60,7 +61,7 @@ export async function PUT(
     // Same best-effort sync as GET: make sure the on-disk file reflects
     // BIND's in-memory state before we diff against it.
     try {
-        await sync(domain, true);
+        if (!isRemoteMode()) await sync(domain, true);
     } catch (err) {
         if (!(err instanceof RndcError)) {
             console.warn(`Best-effort sync of ${domain} before PUT failed:`, err);
@@ -68,7 +69,7 @@ export async function PUT(
     }
 
     // Read current zone file to diff against the incoming records
-    const rawContent = readZoneFile(filename);
+    const rawContent = await loadZone(filename, domain);
     if (!rawContent) {
         return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
@@ -102,7 +103,7 @@ export async function PUT(
     // Flush the journal again so the file is current. If this fails,
     // it's not fatal — the next save will retry.
     try {
-        await sync(domain, true);
+        if (!isRemoteMode()) await sync(domain, true);
     } catch (err) {
         if (!(err instanceof RndcError)) {
             console.warn(`Post-save sync of ${domain} failed:`, err);
@@ -112,8 +113,10 @@ export async function PUT(
     // Fetch the new serial to confirm the update took effect
     let newSerial: number | null = null;
     try {
-        const status = await zoneStatus(zone);
-        newSerial = status.serial;
+        if (!isRemoteMode()) {
+            const status = await zoneStatus(zone);
+            newSerial = status.serial;
+        }
     } catch {
         // best-effort — serial is informational
     }
@@ -131,6 +134,13 @@ export async function DELETE(
 ) {
     const { filename } = await params;
     const domain = extractDomainFromFilename(filename);
+
+    if (isRemoteMode()) {
+        return NextResponse.json(
+            { error: "Deleting zones is not supported in remote (AXFR) mode." },
+            { status: 501 }
+        );
+    }
 
     // Best-effort rndc delzone. It's OK if this fails — the zone may
     // never have been registered with BIND (the case for orphan zone
@@ -188,6 +198,16 @@ export async function DELETE(
         success: true,
         warning: rndcWarning, // surfaced for transparency, not as an error
     });
+}
+
+async function loadZone(filename: string, domain: string): Promise<string | null> {
+    if (!isRemoteMode()) return readZoneFile(filename);
+    try {
+        return await axfrZoneContent(domain);
+    } catch (err) {
+        console.error(`AXFR failed for ${domain}:`, err);
+        return null;
+    }
 }
 
 function extractDomainFromFilename(filename: string): string {

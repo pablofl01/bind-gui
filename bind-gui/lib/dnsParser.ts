@@ -145,9 +145,14 @@ function parseRecordLine(
     // First token is always the name/owner
     name = parts[idx++];
 
-    // Check for IN class
-    if (idx < parts.length && parts[idx].toUpperCase() === "IN") {
-        idx++;
+    // Optional per-record TTL and class (either order, as BIND allows)
+    let ttl = defaultTtl;
+    for (let k = 0; k < 2; k++) {
+        if (idx < parts.length - 1 && /^\d+$/.test(parts[idx])) {
+            ttl = parseInt(parts[idx++], 10);
+        } else if (idx < parts.length && parts[idx].toUpperCase() === "IN") {
+            idx++;
+        }
     }
 
     // Next should be record type
@@ -161,7 +166,7 @@ function parseRecordLine(
 
     const id = `${name}-${typeStr}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-    return { id, name, type: typeStr as DnsRecord["type"], ttl: defaultTtl, data, comment };
+    return { id, name, type: typeStr as DnsRecord["type"], ttl, data, comment };
 }
 
 export function serializeZoneFile(zone: ZoneFile): string {
@@ -258,7 +263,7 @@ export function serializeZoneFile(zone: ZoneFile): string {
 
 function formatRecord(record: DnsRecord): string {
     const comment = record.comment ? ` ; ${record.comment}` : "";
-    return `${padRight(record.name, 8)} IN      ${padRight(record.type, 6)}${record.data}${comment}`;
+    return `${padRight(record.name, 8)} ${record.ttl} IN      ${padRight(record.type, 6)}${record.data}${comment}`;
 }
 
 /** Generate a stable id for a freshly-constructed record. */
