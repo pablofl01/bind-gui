@@ -8,7 +8,14 @@ The Bind DNS GUI is configured entirely through environment variables. Create a 
 |----------|----------|---------|-------------|
 | `AUTH_SECRET` | **Yes** | — | Secret key for session encryption (generate with `openssl rand -base64 32`) |
 | `ADMIN_USERNAME` | No | `admin` | Admin login username |
-| `ADMIN_PASSWORD` | **Yes** | — | Admin login password |
+| `ADMIN_PASSWORD` | **Yes** (unless OIDC only) | — | Admin login password |
+| `OIDC_ISSUER` | No | — | OIDC issuer URL (enables SSO login), e.g. `https://auth.example.com/application/o/bind-gui/` |
+| `OIDC_CLIENT_ID` / `OIDC_CLIENT_SECRET` | With OIDC | — | Client credentials from your identity provider |
+| `OIDC_NAME` | No | `SSO` | Label of the login button |
+| `OIDC_SCOPE` | No | `openid profile email` | Requested scopes |
+| `OIDC_ALLOWED_GROUPS` | No | — | Comma-separated groups allowed to log in (from the claim in `OIDC_GROUPS_CLAIM`, default `groups`) |
+| `OIDC_ALLOWED_EMAILS` | No | — | Comma-separated emails allowed to log in. If both allow-lists are empty, any user authenticated by the provider is allowed |
+| `OIDC_DISABLE_PASSWORD` | No | `false` | `true` hides the password form when OIDC is enabled |
 | `NEXTAUTH_URL` | No | `http://localhost:3001` | Public URL of the GUI (change if behind a reverse proxy) |
 | `CONFIG_DIR` | No | `/app/bind/config` | Path to BIND config files (inside the GUI container) |
 | `BIND_RNDC_HOST` | No | `bind9` | Hostname of the BIND9 container for rndc connections (port 953) |
@@ -210,3 +217,13 @@ The PUT `/api/zones/[filename]` endpoint returns:
 | `success` | boolean | Whether the update was accepted |
 | `applied` | number | Number of nsupdate operations applied |
 | `serial` | number \| null | New SOA serial after the update (if available) |
+
+
+## OIDC login (Authentik, Keycloak, ...)
+
+1. In Authentik create an **OAuth2/OpenID Provider** + Application (confidential client, scopes `openid profile email`).
+2. Set the redirect URI (strict) to `<NEXTAUTH_URL>/api/auth/callback/oidc`.
+3. Set `OIDC_ISSUER` (Authentik: `https://auth.example.com/application/o/<app-slug>/`), `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`.
+4. Recommended: set `OIDC_ALLOWED_GROUPS` so only specific groups get access — otherwise every user the provider authenticates can edit DNS.
+
+The login page then shows a "Sign in with …" button. PKCE and state are used.

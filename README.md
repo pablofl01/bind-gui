@@ -32,7 +32,7 @@
 - **📝 Zone File Editor** — Edit `db.*` zone files with a clean, table-based UI. No more `vi` on the command line.
 - **🔧 Record Management** — Add, edit, and delete DNS records: A, AAAA, CNAME, MX, TXT, PTR, NS, SOA.
 - **📂 Config Viewer** — Browse `named.conf` and other BIND configuration files in read-only mode.
-- **🔐 Authentication** — Password-protected access via environment variables. Simple, no database required.
+- **🔐 Authentication** — Password-protected access via environment variables. Simple, no database required. Optional OIDC SSO (Authentik, Keycloak, …).
 - **♻️ Dynamic Updates (RFC 2136)** — Record edits go through nsupdate with TSIG authentication — no container restart needed, SOA serial bumps automatically.
 - **🔐 DNSSEC inline-signing** — Toggle per-zone DNSSEC signing with a single switch. BIND manages keys and signs automatically. View CDS/CDNSKEY/DS records to publish at your registrar.
 - **📊 Statistics Dashboard** — Server counters, per-zone query statistics, memory usage, and task manager state — all served via BIND's statistics-channels API.

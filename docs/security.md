@@ -5,6 +5,7 @@
 Bind DNS GUI uses a simple, credential-based authentication system:
 
 - Username and password are set via environment variables (`ADMIN_USERNAME`, `ADMIN_PASSWORD`)
+- Optionally, OIDC single sign-on (see [configuration](configuration.md#oidc-login-authentik-keycloak-)). Set `OIDC_ALLOWED_GROUPS`/`OIDC_ALLOWED_EMAILS` to restrict access
 - Sessions use JWT tokens encrypted with `AUTH_SECRET`
 - No user registration — credentials are configured at deployment time
 - All routes except `/login` and `/api/auth/*` are protected by NextAuth middleware
