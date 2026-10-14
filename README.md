@@ -8,6 +8,12 @@
 <h1 align="center">Bind DNS GUI</h1>
 
 <p align="center">
+  <i>
+    This is an OIDC compatible fork from <a href="https://github.com/8perezm/bind-gui">this</a> repository. Credits to the original author.
+  </i>
+</p>
+
+<p align="center">
   A minimalist web interface for your BIND9 DNS server.<br>
   Edit zone files, manage records, and keep your self-hosted infrastructure running smoothly.
 </p>
@@ -141,10 +147,10 @@ For your network to actually *use* this DNS server, configure your router's DHCP
 
 ## 🐳 Docker Images
 
-Pre-built images are available on Docker Hub:
+Pre-built images are available on GHCR:
 
 ```bash
-docker pull migsperez/bind-dns-gui:latest
+docker pull ghcr.io/giros-dit/bind-dns-gui:latest
 ```
 
 Images are tagged with:
