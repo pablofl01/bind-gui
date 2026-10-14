@@ -26,3 +26,24 @@
 statistics-channels {
     inet * port 8953 allow { any; };
 };
+
+// ── Zones (example.com) ─────────────────────────────────────────────
+// zone1: dynamic updates allowed ONLY with TSIG "zone1-key" (used by bind-gui).
+zone "zone1.example.com" {
+    type master;
+    file "/etc/bind/db.zone1.example.com";
+    // Reading the zone (AXFR) is a transfer, not an update: update-policy
+    // does not cover it, so it must be granted explicitly to the key.
+    allow-transfer { key zone1-key; };
+    update-policy {
+        grant zone1-key zonesub ANY;
+    };
+};
+
+// zone2: static, no dynamic updates (zone1-key has no rights here).
+zone "zone2.example.com" {
+    type master;
+    file "/etc/bind/db.zone2.example.com";
+    allow-update { none; };
+    allow-transfer { none; };
+};
